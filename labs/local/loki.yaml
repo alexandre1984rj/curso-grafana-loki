@@ -1,0 +1,40 @@
+# Configuração didática para Loki 3.7.0. Valores abaixo são escolhas explícitas.
+auth_enabled: false # somente rede local do laboratório
+server:
+  http_listen_port: 3100
+common:
+  path_prefix: /loki
+  replication_factor: 1 # uma instância, sem alta disponibilidade
+  ring:
+    kvstore:
+      store: inmemory
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+schema_config:
+  configs:
+    - from: "2024-01-01" # anterior aos eventos gerados
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /loki/tsdb-index
+    cache_location: /loki/tsdb-cache
+ingester:
+  wal:
+    enabled: true
+    dir: /loki/wal
+compactor:
+  working_directory: /loki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+limits_config:
+  allow_structured_metadata: true
+  retention_period: 24h # mínimo didático; não é default universal
+analytics:
+  reporting_enabled: false

@@ -1,0 +1,56 @@
+name: loki-curso
+services:
+  loki:
+    image: grafana/loki:3.7.0
+    command: ["-config.file=/etc/loki/config.yaml"]
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - ./loki.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.2.0
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      # Somente localhost, sem autenticação: simplificação explícita do laboratório.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    volumes:
+      - ./datasources.yaml:/etc/grafana/provisioning/datasources/loki.yaml:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - loki
+
+  alloy:
+    image: grafana/alloy:v1.11.0
+    command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
+    ports:
+      - "127.0.0.1:12345:12345"
+    volumes:
+      - ./config.alloy:/etc/alloy/config.alloy:ro
+      - demo-logs:/var/log/demo:ro
+      - alloy-data:/var/lib/alloy/data
+    depends_on:
+      - loki
+      - generator
+    restart: unless-stopped
+
+  generator:
+    image: node:22.14.0-alpine
+    command: ["node", "/app/generate.mjs"]
+    volumes:
+      - ./generate.mjs:/app/generate.mjs:ro
+      - demo-logs:/var/log/demo
+    restart: unless-stopped
+
+volumes:
+  loki-data:
+  grafana-data:
+  alloy-data:
+  demo-logs:

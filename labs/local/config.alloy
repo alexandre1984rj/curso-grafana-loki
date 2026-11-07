@@ -1,0 +1,45 @@
+// Configuração compatível com Alloy 1.11.0; não é YAML.
+local.file_match "json" {
+  path_targets = [{
+    "__path__" = "/var/log/demo/json.log",
+    "app"      = "checkout",
+    "env"      = "lab",
+    "format"   = "json",
+  }]
+}
+
+local.file_match "logfmt" {
+  path_targets = [{
+    "__path__" = "/var/log/demo/logfmt.log",
+    "app"      = "checkout",
+    "env"      = "lab",
+    "format"   = "logfmt",
+  }]
+}
+
+loki.source.file "json" {
+  targets    = local.file_match.json.targets
+  forward_to = [loki.process.json.receiver]
+}
+
+loki.source.file "logfmt" {
+  targets    = local.file_match.logfmt.targets
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.process "json" {
+  stage.json {
+    expressions = { request_id = "request_id" }
+  }
+  // Um identificador distinto por requisição não vira label indexado.
+  stage.structured_metadata {
+    values = { request_id = "" }
+  }
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

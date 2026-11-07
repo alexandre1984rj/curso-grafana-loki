@@ -1,0 +1,9 @@
+node_modules/
+dist/
+artifacts/
+.env
+*.log
+.impeccable/mocks/
+.impeccable/config.local.json
+
+.impeccable/build/
