@@ -38,3 +38,7 @@ As capturas e os resultados brutos locais ficam em artifacts/, ignorado pelo Git
 - Retenção de 24 h foi configurada; não esperamos um dia para comprovar exclusão física. O processo é assíncrono.
 - As limitações de acesso às fontes históricas estão em fontes-e-decisoes.md.
 - A execução local da CI não implica que o GitHub já tenha executado o workflow. O resultado remoto deve ser consultado nos checks do commit.
+
+## Ambiente de CI
+
+A primeira execução remota confirmou testes de lógica e build. O runner ubuntu-latest selecionou Ubuntu 26.04, incompatível com a versão fixada do Playwright. O workflow foi corrigido para ubuntu-24.04 nos dois jobs; o resultado da nova execução deve ser conferido nos checks do commit.
