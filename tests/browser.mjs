@@ -79,9 +79,22 @@ try {
   assert.equal(await small.locator('#menu-toggle').textContent(),'Abrir trilha');
   assert.ok(await small.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   assert.equal(await small.locator('#packet').evaluate(node=>getComputedStyle(node).display),'none');
+  await small.locator('.example-block pre').focus();
+  if(await small.locator('.example-block pre').evaluate(node=>node.scrollWidth>node.clientWidth)) {
+    await small.keyboard.press('ArrowRight');
+    await small.waitForFunction(()=>document.querySelector('.example-block pre').scrollLeft>0);
+  }
+  assert.equal(await small.locator('.example-block pre').getAttribute('tabindex'),'0');
   await small.screenshot({path:'artifacts/mobile.png',fullPage:true});
   const mobileAxe=await new AxeBuilder({page:small}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
-  assert.deepEqual(mobileAxe.violations.map(v=>v.id),[]);
+  assert.deepEqual(mobileAxe.violations.map(v=>({id:v.id,targets:v.nodes.map(node=>node.target)})),[]);
+  for(const module of modules) {
+    await small.goto(url+'/#'+module.id);
+    await small.getByRole('heading',{level:1,name:module.title}).waitFor();
+    assert.ok(await small.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),module.id);
+    const audit=await new AxeBuilder({page:small}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
+    assert.deepEqual(audit.violations.map(v=>({id:v.id,targets:v.nodes.map(node=>node.target)})),[],module.id);
+  }
   await mobile.close();
   assert.deepEqual(errors,[]);
   await writeFile('artifacts/browser-results.json',JSON.stringify({modules:modules.length,quizzes:20,axeViolations:0,consoleErrors:errors,viewports:['1440x1050','390x844'],checks:['navigation','animation','keyboard SVG','quiz feedback','completion','reload','reset','cardinality','playground','reduced motion']},null,2));

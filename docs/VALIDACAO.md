@@ -13,7 +13,7 @@ Data: **2026-11-07**. Execução local em Windows, com containers Linux no Docke
 | Quizzes | Alternativas erradas e corretas produziram feedback; conclusão e navegação funcionaram |
 | Progresso | Conclusões e respostas preservadas após reload; reinício confirmado e persistido |
 | Simulação LogQL | Cinco consultas guiadas aprovadas; sintaxe fora do subconjunto rejeitada |
-| Acessibilidade automatizada | axe com regras WCAG A/AA e 2.1 AA: zero violações nos dez módulos desktop e na tela mobile verificada |
+| Acessibilidade automatizada | axe com regras WCAG A/AA e 2.1 AA: zero violações nos dez módulos desktop e nos dez módulos mobile |
 | Inspeção visual | Capturas desktop/mobile examinadas; correções de botões e conectores aplicadas |
 | Revisão independente | Três achados estáticos corrigidos: continuidade de percursos, rótulos de arestas e botão após Escape |
 | Docker Compose | docker compose config --quiet passou; quatro serviços iniciaram |
@@ -42,3 +42,7 @@ As capturas e os resultados brutos locais ficam em artifacts/, ignorado pelo Git
 ## Ambiente de CI
 
 A primeira execução remota confirmou testes de lógica e build. O runner ubuntu-latest selecionou Ubuntu 26.04, incompatível com a versão fixada do Playwright. O workflow foi corrigido para ubuntu-24.04 nos dois jobs; o resultado da nova execução deve ser conferido nos checks do commit.
+
+Na execução seguinte, o laboratório real passou no GitHub. O Chromium Linux detectou que blocos de código com rolagem no celular precisavam de foco explícito. Os blocos receberam tabindex, nome acessível e foco visível; o teste passou a exercitar rolagem com ArrowRight quando existe overflow. A regra axe permaneceu habilitada.
+
+A auditoria local ampliada aos dez módulos em mobile também passou, mantendo zero violações nas regras axe verificadas e sem erros de console. A execução remota posterior cobre essa mesma suíte.
