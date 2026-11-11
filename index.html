@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Aprenda Grafana Loki por dentro: arquitetura, LogQL e operação, com diagramas interativos e um laboratório local com Alloy.">
-  <meta name="theme-color" content="#123c35">
+  <meta name="description" content="Aprenda Grafana Loki por dentro: arquitetura, LogQL e operação, com simulações interativas de streams, hash ring, sharding, LogQL e bloom filters, e um laboratório local com Alloy.">
+  <meta name="theme-color" content="#111217">
+  <script>try{if(localStorage.getItem('loki-por-dentro:theme')==='light')document.documentElement.dataset.theme='light'}catch(e){}</script>
   <title>Loki por dentro — curso interativo</title>
   <link rel="icon" href="./public/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./src/style.css">
@@ -15,13 +16,14 @@
   <header class="topbar">
     <a class="brand" href="#fundamentos" aria-label="Loki por dentro, início"><svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true"><path d="M5 5v22h22M12 5v15h15M19 5v8h8" fill="none" stroke="currentColor" stroke-width="3"/></svg><span>Loki <strong>por dentro</strong></span></a>
     <span class="top-note">Arquitetura que você pode explorar.</span>
+    <button id="theme-toggle" class="secondary theme-toggle" type="button" aria-pressed="false">Tema claro</button>
     <button id="menu-toggle" class="secondary menu-toggle" aria-expanded="false" aria-controls="course-nav">Abrir trilha</button>
     <a class="lab-link" href="./labs/local/README.md">Laboratório local <span aria-hidden="true">↗</span></a>
   </header>
   <div class="workspace">
     <aside class="sidebar" id="course-nav" aria-label="Trilha do curso">
-      <div class="sidebar-heading"><h2>Sua trilha</h2><span id="progress-count">0 / 10</span></div>
-      <progress id="course-progress" max="10" value="0" aria-label="Módulos concluídos"></progress>
+      <div class="sidebar-heading"><h2>Sua trilha</h2><span id="progress-count">0 / 18</span></div>
+      <progress id="course-progress" max="18" value="0" aria-label="Módulos concluídos"></progress>
       <nav id="module-nav" aria-label="Módulos"></nav>
       <p class="saved-note">Progresso salvo neste navegador.</p>
       <button class="text-button" id="reset-progress">Reiniciar progresso</button>

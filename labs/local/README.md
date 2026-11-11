@@ -96,6 +96,57 @@ Para transformar uma consulta métrica em painel, use Add to dashboard / adicion
 4. **Retenção:** localize retention_enabled e retention_period. O mínimo configurado é 24 h; não prometa exclusão instantânea nem tente validar retenção de um dia em segundos.
 5. **Cardinalidade:** use a visualização do site; não adicione IDs infinitos aos labels do laboratório sem limites.
 
+### Inspeção interna (módulos 4 a 9)
+
+Os comandos abaixo mostram o estado que os módulos descrevem. Rode-os com o laboratório no ar.
+
+~~~sh
+# Ring (módulo 4): uma instância ACTIVE com 128 tokens; RF=1 neste laboratório.
+curl -s http://localhost:3100/ring | grep -o 'ACTIVE' | head -1
+
+# Métricas de escrita (módulos 4 a 6)
+curl -s http://localhost:3100/metrics | grep -E '^loki_distributor_bytes_received_total|^loki_ingester_memory_streams|^loki_ingester_wal_records_logged_total|^loki_ingester_chunks_flushed_total'
+
+# O que o seletor de Q1 toca, sem ler linhas (módulos 1 e 8)
+curl -sG http://localhost:3100/loki/api/v1/index/stats --data-urlencode 'query={app="checkout", env="lab"}'
+
+# Labels gravados: service_name aparece sem estar no config.alloy (módulo 2)
+curl -s http://localhost:3100/loki/api/v1/labels
+
+# WAL, índice ativo e chunks no disco (módulos 6 e 7).
+# A imagem grafana/loki:3.7.0 não tem shell nem ls: monte o volume num container auxiliar, só leitura.
+docker run --rm -v loki-curso_loki-data:/loki:ro node:22.14.0-alpine ls -la /loki/wal /loki/tsdb-index /loki/chunks
+docker run --rm -v loki-curso_loki-data:/loki:ro node:22.14.0-alpine sh -c 'ls /loki/chunks/fake | head; ls -R /loki/chunks/index | head'
+~~~
+
+O nome do volume vem do projeto Compose (`loki-curso`). Confira com `docker volume ls` se você mudou o nome do projeto. Apagar o projeto no Docker Desktop não apaga os volumes: se já rodou o laboratório antes, verá WAL, checkpoints e chunks antigos.
+
+Antes do primeiro flush, `/loki/chunks/fake` pode estar vazio: os chunks ficam no ingester até `max_chunk_age` (2 h), `chunk_idle_period` (30 min) ou o chunk encher. Para observar o flush agora:
+
+~~~sh
+curl -s -X POST http://localhost:3100/flush        # resposta esperada: 204
+curl -s http://localhost:3100/metrics | grep '^loki_ingester_chunks_flushed_total'
+docker run --rm -v loki-curso_loki-data:/loki:ro node:22.14.0-alpine sh -c 'ls /loki/chunks/fake/*/ | head'
+~~~
+
+`loki_ingester_chunks_flushed_total` só aparece em /metrics depois do primeiro flush; antes disso, a ausência da linha não é erro. Depois do `/flush`, o motivo registrado é `reason="forced"`. Para ler o nome de um arquivo de chunk: `echo <nome> | base64 -d` mostra `from:through:checksum`, com from e through em milissegundos Unix hexadecimais.
+
+Cada diretório em `/loki/chunks/fake` é um fingerprint; o nome de cada arquivo é `from:through:checksum` codificado em base64, porque o cliente de filesystem aplica `FSEncoder` ao último segmento da chave. Os índices aparecem em `/loki/chunks/index/index_<dia>/` só depois da rotação de 15 min e do upload: o flush não envia o índice no mesmo instante.
+
+**Linha antiga recusada (módulo 4):** envie uma linha com timestamp de 14 dias atrás e observe o 400. Reenviar não resolve: é validação (`reject_old_samples_max_age` = 1w), não capacidade.
+
+~~~sh
+TS=$(( ($(date +%s) - 14*86400) * 1000000000 ))
+curl -s -o /dev/null -w '%{http_code}\n' -H 'Content-Type: application/json' \
+  -X POST http://localhost:3100/loki/api/v1/push \
+  --data '{"streams":[{"stream":{"app":"checkout","env":"lab"},"values":[["'$TS'","linha antiga"]]}]}'
+curl -s http://localhost:3100/metrics | grep 'loki_discarded_samples_total' | grep greater_than_max_sample_age
+~~~
+
+**Cache de resultados (módulo 8):** este laboratório não configura `query_range.cache_results`, cujo default é `false`. Repetir Q1 não reutiliza resultados; a segunda execução só fica mais rápida pelo cache de chunks embutido e pelo cache de páginas do sistema.
+
+**Retries do Alloy (módulo 3):** abra http://localhost:12345/metrics, pare o Loki por 30 s (`docker compose stop loki`, depois `docker compose start loki`) e compare `loki_write_batch_retries_total` e `loki_write_dropped_entries_total`.
+
 ## Diagnóstico
 
 | Sintoma | Verificação | Próximo passo |

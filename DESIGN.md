@@ -1,5 +1,14 @@
 # Sistema visual
 
+## Revisão de 2026-11-11: tema escuro e palco de objetos
+
+O tema padrão passou a ser **escuro**, no estilo de painéis de observabilidade (fundo #111217, painéis #181b1f/#1f2229, texto #d0d1dc). O tema claro anterior continua disponível pelo botão no topo (`data-theme="light"`, salvo em localStorage). Todas as cores são tokens em `:root`; o tema claro só redefine os tokens.
+
+Cada conceito do Loki tem uma cor fixa, usada nos chips, nas zonas e nos objetos dos laboratórios: label (amarelo), structured metadata (roxo), campo extraído (azul claro), linha (cinza, borda tracejada), stream (azul), chunk (verde), ingester (laranja), object storage, índice, bloom (ciano), distributor e shard. Ingesters têm oito cores próprias (`--i0` a `--i7`) para que o dono de um token seja reconhecível no anel e nas unidades.
+
+Os laboratórios compartilham uma moldura (`src/lab/stage.js`): cabeçalho com a pergunta, controles, métricas, palco, inspetor lateral, narração, player e premissas. Estados "descartado", "fora do seletor" e "pulado" são marcados por borda tracejada, cor neutra e risco no texto, nunca só por opacidade, para manter contraste AA. Movimento: FLIP de objetos com a mesma chave entre frames; com `prefers-reduced-motion`, a troca é instantânea.
+
+
 ## Direção e superfície
 
 Modo: leitura com exploração. Um manual de campo de engenharia: conteúdo contínuo, trilha lateral numerada e uma bancada visual integrada à explicação. O primeiro viewport apresenta a pergunta da aula, objetivos e percurso; a navegação não compete com o conteúdo.
